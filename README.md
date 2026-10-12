@@ -1,34 +1,30 @@
 # VisionClassifyLab
 
-一个通过约 14 天实践，逐步学习 PyTorch 图像分类的学习型项目。
+一个使用 PyTorch 学习计算机视觉图像分类的实验项目。从小规模、可直接阅读的程序开始，逐步理解数据加载、模型前向计算、损失、反向传播、参数更新和预测。
 
-## Day 1：最小图像分类流程
+项目以理解完整分类流程为目标，优先保持代码简单，并记录实验中的张量形状、结果和疑问。
 
-今天的学习目标：
-
-1. 理解 `image → CNN → logits → CrossEntropyLoss → prediction` 的各个环节。
-2. 后续使用 MNIST 跑通一个最小图像分类程序。
-
-当前仅完成项目初始化，尚未实现模型、数据加载和训练程序。
-
-### 核心流程
-
-MNIST 的图像经过张量转换后，单张形状为 `[1, 28, 28]`；一个批次的形状为 `[N, 1, 28, 28]`。标签是 `0` 到 `9` 的整数，批次标签形状为 `[N]`。
-
-CNN 接收图像，输出形状为 `[N, 10]` 的 `logits`。这些值是每个类别的原始分数，不是概率。
-
-`CrossEntropyLoss(logits, labels)` 使用原始分数与正确标签计算损失；不要先对 logits 做 softmax。训练时，通过反向传播和优化器更新模型参数。
-
-预测直接使用 `logits.argmax(dim=1)`，选择分数最大的类别。损失计算和预测都从 logits 出发：损失用于学习，预测用于输出分类结果；预测不需要先计算损失。
+## 项目结构
 
 ```text
-image → CNN → logits ─┬→ CrossEntropyLoss(logits, labels) → 反向传播 → 参数更新
-                      └→ argmax → prediction
+VisionClassifyLab/
+├── AGENTS.md                 # 项目规则与 Git 提交规范
+├── README.md                 # 项目介绍与运行入口
+├── requirements.txt          # Python 依赖
+├── .gitignore                # Git 忽略规则
+├── src/                      # 可直接运行的实验源码
+│   └── day1_mnist.py          # 最小 MNIST CNN 分类实验
+├── notebooks/                # 可选的交互实验笔记
+├── outputs/                  # 实验运行产物
+└── notes/
+    └── learning_log.md       # 学习记录、实验结果和问题
 ```
 
-### 环境准备
+`data/` 在运行时用于保存下载的数据集；数据集、虚拟环境、缓存和 `outputs/` 中的运行产物不提交到 Git。空目录中的 `.gitkeep` 用于让 Git 保留目录。
 
-建议在项目根目录创建 Python 虚拟环境：
+## 环境准备
+
+在项目根目录创建 Python 虚拟环境：
 
 ```bash
 python -m venv .venv
@@ -46,36 +42,37 @@ Linux / macOS 激活方式：
 source .venv/bin/activate
 ```
 
-然后安装 Day 1 依赖：
+安装依赖：
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-依赖用途：`torch` 用于模型和训练，`torchvision` 用于 MNIST 数据集及图像转张量，`numpy` 用于基础数组操作，`matplotlib` 用于查看图像和绘图。
+- `torch`：构建模型、计算损失和训练。
+- `torchvision`：加载图像数据集及将图像转换为张量。
+- `numpy`：基础数组操作。
+- `matplotlib`：查看图像和绘图。
 
-## 项目结构
+## 运行实验
 
-```text
-VisionClassifyLab/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── src/
-├── notebooks/
-├── outputs/
-└── notes/
-    └── learning_log.md
+当前实验使用 MNIST 和一个简单 CNN，默认训练 1 个 epoch：
+
+```bash
+python src/day1_mnist.py
 ```
 
-- `src/`：存放后续的 Python 源码，如 Day 1 的最小 MNIST 分类程序。
-- `notebooks/`：存放可选的交互实验笔记。目前不安装 Jupyter。
-- `outputs/`：存放运行产生的图像、日志和模型文件，内容不纳入 Git。
-- `notes/`：记录每日学习目标、理解、实验结果和问题。
-- `README.md`：项目介绍、环境准备和学习入口。
-- `requirements.txt`：Day 1 使用的四项依赖。
-- `.gitignore`：排除虚拟环境、缓存、下载的数据和运行产物。
+首次运行需要联网下载 MNIST 到项目的 `data/` 目录。程序会打印第一个训练 batch 的图像、标签和 logits 形状，随后输出平均训练损失和测试准确率。
 
-空目录中的 `.gitkeep` 仅用于让 Git 保留目录，不包含程序逻辑。后续 MNIST 数据可以下载到 `data/`，无需提前创建或提交数据集。
+## 分类流程
 
-当前范围不包含 Data Augmentation、Transfer Learning、Scheduler、Early Stopping 或 Confusion Matrix。
+```text
+MNIST → DataLoader → CNN → logits
+                           ├→ CrossEntropyLoss(logits, labels) → backward → optimizer.step()
+                           └→ argmax → prediction
+```
+
+每批图像形状为 `[N, C, H, W]`，模型输出为 `[N, 类别数]` 的原始分数。`CrossEntropyLoss` 使用这些分数和整数类别标签计算损失；预测沿类别维度取 `argmax`。实验源码中的注释给出每层张量形状，学习过程记录在 `notes/learning_log.md`。
+
+## Git 提交规范
+
+提交信息采用 `type(scope): description` 格式，例如 `feat(mnist): add minimal CNN classification experiment`。具体约定见 `AGENTS.md`。
